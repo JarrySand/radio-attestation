@@ -185,6 +185,7 @@
 </template>
 
 <script>
+import Web3Modal from "web3modal";
 import { getAttestationsByRecipient } from "./utils/easscan";
 import Web3 from "web3";
 import { Buffer } from "buffer";
@@ -283,26 +284,25 @@ export default {
     async connectWallet() {
       try {
         const providerOptions = {
-          rpc: {
-            // Add your desired network's RPC URL here
-            1: "https://mainnet.infura.io/v3/2ff2983fb66349749d43fcb0a3402469",
+          walletconnect: {
+            package: WalletConnectProvider,
+            options: {
+              rpc: {
+                // Add your desired network's RPC URL here
+                1: "https://mainnet.infura.io/v3/2ff2983fb66349749d43fcb0a3402469",
+              },
+            },
           },
         };
 
-        let provider;
+        const web3Modal = new Web3Modal({
+          cacheProvider: true,
+          providerOptions,
+        });
 
-        if (window.ethereum) {
-          await window.ethereum.request({
-            method: "eth_requestAccounts",
-          });
-          provider = window.ethereum;
-        } else {
-          const walletConnectProvider = new WalletConnectProvider(providerOptions);
-          await walletConnectProvider.enable();
-          provider = walletConnectProvider;
-        }
-
+        const provider = await web3Modal.connect();
         this.web3 = new Web3(provider);
+
         const accounts = await this.web3.eth.getAccounts();
         const rawAddress = accounts[0];
         const checksumAddress = this.toChecksumAddress(rawAddress);
