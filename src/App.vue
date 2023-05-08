@@ -282,24 +282,27 @@ export default {
   methods: {
     async connectWallet() {
       try {
+        const providerOptions = {
+          rpc: {
+            // Add your desired network's RPC URL here
+            1: "https://mainnet.infura.io/v3/2ff2983fb66349749d43fcb0a3402469",
+          },
+        };
+
+        let provider;
+
         if (window.ethereum) {
           await window.ethereum.request({
             method: "eth_requestAccounts",
           });
-          this.web3 = new Web3(window.ethereum);
+          provider = window.ethereum;
         } else {
-          const providerOptions = {
-            rpc: {
-              // Add your desired network's RPC URL here
-              1: "https://mainnet.infura.io/v3/2ff2983fb66349749d43fcb0a3402469",
-            },
-          };
-
           const walletConnectProvider = new WalletConnectProvider(providerOptions);
           await walletConnectProvider.enable();
-          this.web3 = new Web3(walletConnectProvider);
+          provider = walletConnectProvider;
         }
 
+        this.web3 = new Web3(provider);
         const accounts = await this.web3.eth.getAccounts();
         const rawAddress = accounts[0];
         const checksumAddress = this.toChecksumAddress(rawAddress);
