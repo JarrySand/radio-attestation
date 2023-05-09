@@ -2,26 +2,28 @@
   <div id="app">
     <h1>Attestation Verifier</h1>
 
-    <div class="switch-container">
-      <button
-        class="switch-button"
-        :class="{ active: !isRadioStation }"
-        @click="switchToListener"
-      >
-        For Listeners
-      </button>
-      <button
-        class="switch-button"
-        :class="{ active: isRadioStation }"
-        @click="switchToRadioStation"
-      >
-        For Radio Stations
-      </button>
+    <div class="switch-wrapper">
+      <div class="switch-container">
+        <button
+          class="switch-button"
+          :class="{ active: !isRadioStation }"
+          @click="switchToListener"
+        >
+          For Listeners
+        </button>
+        <button
+          class="switch-button"
+          :class="{ active: isRadioStation }"
+          @click="switchToRadioStation"
+        >
+          For Radio Stations
+        </button>
+      </div>
     </div>
 
     <div v-if="!isRadioStation">
       <!-- Listener UI -->
-      <button @click="connectWallet">Connect Wallet</button>
+      <button v-if="!recipientAddress" @click="connectWallet">Connect Wallet</button>
       <p v-if="recipientAddress">Recipient Address: {{ recipientAddress }}</p>
       <p v-if="userPenName">Welcome, {{ userPenName }}!</p>
 
@@ -97,24 +99,28 @@
           <button type="submit" class="submit-button">Submit Post</button>
         </form>
       </div>
-      <div v-if="listenerPosts.length > 0">
+      <div v-if="listenerPosts.length > 0 && recipientAddress">
         <h2>Listener Posts:</h2>
-        <ul class="listener-posts">
-          <li v-for="post in currentListenerPosts" :key="post.id" class="listener-post">
-            <div class="post-header">
-              <strong class="post-station">Station: {{ post.station }}</strong>
-              <strong class="post-type">Type: {{ post.postType }}</strong>
-            </div>
-            <div class="post-content">
-              <strong>Content:</strong> {{ post.content }}
-            </div>
-            <div class="post-footer">
-              <strong>Pen Name:</strong> {{ post.penName }}<br>
-              <strong>Wallet Address:</strong> {{ post.walletAddress }}
-            </div>
-            <button @click="deletePost(post.id)">Delete</button>
-          </li>
-        </ul>
+        <table class="listener-posts" style="border: 1px solid #000;">
+          <thead>
+            <tr>
+              <th>Station</th>
+              <th>Type</th>
+              <th>Content</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="post in currentListenerPosts" :key="post.id">
+              <td>{{ post.station }}</td>
+              <td>{{ post.postType }}</td>
+              <td>{{ post.content }}</td>
+              <td>
+                <button @click="deletePost(post.id)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
     <div v-else>
@@ -141,7 +147,7 @@
         </form>
       </div>
 
-      <div v-if="isRadioStation">
+      <div v-if="isRadioStation && recipientAddress">
         <h3>Current post type options</h3>
         <table>
           <thead>
@@ -163,23 +169,28 @@
 
       <div v-if="radioStationPosts.length > 0">
         <h2>Listener Posts for {{ radioStation.name }}:</h2>
-        <ul class="listener-posts">
-          <li v-for="post in radioStationPosts" :key="post.id" class="listener-post">
-            <div class="post-header">
-              <strong class="post-station">Station: {{ post.station }}</strong>
-              <strong class="post-type">Type: {{ post.postType }}</strong>
-            </div>
-            <div class="post-content">
-              <strong>Content:</strong> {{ post.content }}
-            </div>
-            <div class="post-footer">
-              <strong>Pen Name:</strong> {{ post.penName }}<br>
-              <strong>Wallet Address:</strong> {{ post.walletAddress }}
-            </div>
-            <button @click="createAttestation(post)">Attest</button>
-          </li>
-        </ul>
-      </div>      
+        <table class="listener-posts">
+          <thead>
+            <tr>
+              <th>Pen Name</th>
+              <th>Type</th>
+              <th>Content</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="post in radioStationPosts" :key="post.id" class="listener-post">
+              <td>{{ post.penName }}</td>
+              <td>{{ post.postType }}</td>
+              <td>{{ post.content }}</td>
+              <td>
+                <button @click="createAttestation(post)">Attest</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
       <!-- Add the Radio Station specific UI here -->
     </div>
   </div>
@@ -562,10 +573,14 @@ export default {
 </script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Roboto Mono', Arial, sans-serif;
   margin: 0;
   padding: 0;
+  background-color: #c0c0c0;
+  color: #000;
 }
 
 #app {
@@ -574,10 +589,10 @@ body {
 }
 
 button {
-  background-color: #4caf50;
-  border: none;
-  color: white;
-  padding: 15px 32px;
+  background-color: #c0c0c0;
+  border: 1px solid #808080;
+  color: #000;
+  padding: 8px 16px;
   text-align: center;
   text-decoration: none;
   display: inline-block;
@@ -586,26 +601,27 @@ button {
   cursor: pointer;
 }
 
+button:active {
+  border: 1px solid #fff;
+}
+
 table {
   border-collapse: collapse;
   width: 100%;
   margin-top: 1rem;
+  border: 1px solid #000;
 }
 
 th,
 td {
-  border: 1px solid #ddd;
+  border: 1px solid #000;
   padding: 8px;
   text-align: left;
 }
 
 th {
-  background-color: #f2f2f2;
+  background-color: #c0c0c0;
   font-weight: bold;
-}
-
-tr:nth-child(even) {
-  background-color: #f2f2f2;
 }
 
 .form {
@@ -632,22 +648,28 @@ textarea {
 }
 
 .listener-posts {
-  list-style-type: none;
-  padding: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+    width: 100%;
+    margin-top: 1rem;
+  }
 
-.listener-post {
-  background-color: #f2f2f2;
-  border: 1px solid #ddd;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 5px;
-  width: 80%;
-}
+  .listener-posts th,
+  .listener-posts td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+    word-wrap: break-word;
+    max-width: 300px;
+  }
+
+  .listener-posts th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+
+  .listener-posts tr:hover {
+    background-color: #ddd;
+  }
+
 
 .post-header,
 .post-content,
@@ -664,9 +686,9 @@ textarea {
 }
 
 .switch-button {
-  background-color: #f1f1f1;
-  border: 1px solid #ccc;
-  color: #333;
+  background-color: #c0c0c0;
+  border: 1px solid #808080;
+  color: #000;
   cursor: pointer;
   font-size: 14px;
   margin: 0 5px;
@@ -683,4 +705,24 @@ textarea {
   background-color: #4caf50;
   color: white;
 }
+
+.switch-button.active:active {
+  border: 1px solid #fff;
+}
+
+.switch-wrapper {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  z-index: 10;
+}
+
+#app {
+  position: relative;
+  padding-top: 30px;
+}
 </style>
+
+
+
+
