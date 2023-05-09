@@ -670,7 +670,6 @@ textarea {
     background-color: #ddd;
   }
 
-
 .post-header,
 .post-content,
 .post-footer {
@@ -720,6 +719,17 @@ textarea {
 #app {
   position: relative;
   padding-top: 30px;
+}
+
+@media (max-width: 767px) {
+  body {
+    font-size: 14px;
+  }
+
+  .form {
+    max-width: 90%;
+    margin: 0 auto;
+  }
 }
 </style>
 
