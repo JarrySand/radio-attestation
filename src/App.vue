@@ -206,8 +206,18 @@ import { collection, addDoc, where, query, getDocs, onSnapshot, doc, deleteDoc }
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { ethers } from 'ethers';
+import { InfuraProvider } from "@ethersproject/providers";
 
-const provider = new ethers.providers.Web3Provider(window.ethereum);
+let provider;
+
+if (window.ethereum) {
+  provider = new ethers.providers.Web3Provider(window.ethereum);
+} else {
+  // Fallback to a default provider
+  const infuraApiKey = "https://mainnet.infura.io/v3/2ff2983fb66349749d43fcb0a3402469";
+  const network = "mainnet"; // You can also use "rinkeby", "ropsten", "kovan", or "goerli"
+  provider = new InfuraProvider(network, infuraApiKey);
+}
 
 // Get the signer
 const signer = provider.getSigner();
