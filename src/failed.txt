@@ -176,7 +176,6 @@
               <strong>Pen Name:</strong> {{ post.penName }}<br>
               <strong>Wallet Address:</strong> {{ post.walletAddress }}
             </div>
-            <button @click="createAttestation(post)">Attest</button>
           </li>
         </ul>
       </div>      
@@ -193,15 +192,6 @@ import { Buffer } from "buffer";
 import { db } from "./firebase";
 import { collection, addDoc, where, query, getDocs, onSnapshot, doc, deleteDoc } from "firebase/firestore";
 import WalletConnectProvider from '@walletconnect/web3-provider';
-import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
-import { ethers } from 'ethers';
-
-const provider = new ethers.providers.Web3Provider(window.ethereum);
-
-// Get the signer
-const signer = provider.getSigner();
-
-export const EASContractAddress = "0xC2679fBD37d54388Ce493F1DB75320D236e1815e"; // Sepolia v0.26
 
 export default {
   name: "App",
@@ -240,7 +230,6 @@ export default {
         { id: 3, name: "Request" },
       ],
       filteredRadioStationPostTypeOptions: [],
-      signer: null,
     };
   },
   async created() {
@@ -313,8 +302,6 @@ export default {
 
         const provider = await web3Modal.connect();
         this.web3 = new Web3(provider);
-
-        this.signer = new ethers.providers.Web3Provider(provider).getSigner();
 
         const accounts = await this.web3.eth.getAccounts();
         const rawAddress = accounts[0];
@@ -510,36 +497,6 @@ export default {
         (option) => option.id !== optionId
       );
     },
-    async createAttestation(post) {
-      
-      const eas = new EAS(EASContractAddress,);
-      eas.connect(signer);
-
-      const schemaEncoder = new SchemaEncoder("string[] RadioStationName,uint64 Date,string TypeofParticipation");
-      const encodedData = schemaEncoder.encodeData([
-        { name: "RadioStationName", value: [this.radioStation.name], type: "string[]" },
-        { name: "Date", value: Math.floor(Date.now() / 1000), type: "uint64" },
-        { name: "TypeofParticipation", value: "posting", type: "string" },
-      ]);
-
-      // Replace with your own schemaUID and schema string
-      const schemaUID = "0x2a98ae55558be4e173402dbb3a2cbd38e1be1b815988cfb6faab22ffe6d45fc7";
-
-      // Step 3: Provide the recipient address, expiration time, and other necessary data
-      const tx = await eas.attest({
-        schema: schemaUID,
-        data: {
-          recipient: post.walletAddress,
-          expirationTime: 0,
-          revocable: true,
-          data: encodedData,
-        },
-      });
-
-      const newAttestationUID = await tx.wait();
-
-      console.log("New attestation UID:", newAttestationUID);
-    }
   },
   watch: {
     "listenerPostForm.station": function() {

@@ -1,5 +1,10 @@
-import { createApp } from 'vue';
-import App from './App.vue';
+import { createApp } from "vue";
+import App from "./App.vue";
+import { setupMetamask } from "./metamask.js";
 
-const app = createApp(App);
-app.mount('#app');
+async function initApp() {
+  await setupMetamask();
+  createApp(App).mount("#app");
+}
+
+initApp();

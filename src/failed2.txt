@@ -194,14 +194,15 @@ import { db } from "./firebase";
 import { collection, addDoc, where, query, getDocs, onSnapshot, doc, deleteDoc } from "firebase/firestore";
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
+import { Web3Provider } from "@ethersproject/providers";
 import { ethers } from 'ethers';
 
-const provider = new ethers.providers.Web3Provider(window.ethereum);
+const EASContractAddress = "0xC2679fBD37d54388Ce493F1DB75320D236e1815e"; // Sepolia v0.26
 
-// Get the signer
-const signer = provider.getSigner();
-
-export const EASContractAddress = "0xC2679fBD37d54388Ce493F1DB75320D236e1815e"; // Sepolia v0.26
+async function initializeEASInstance(ethersProvider) {
+  const signer = ethersProvider.getSigner();
+  eas = new EAS(EASContractAddress, signer);
+}
 
 export default {
   name: "App",
@@ -240,8 +241,15 @@ export default {
         { id: 3, name: "Request" },
       ],
       filteredRadioStationPostTypeOptions: [],
-      signer: null,
+      ethersProvider: null,
+      eas: null,
     };
+  },
+  async mounted() {
+    // Set up ethersProvider
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    this.ethersProvider = provider;
+    await initializeEASInstance(provider); 
   },
   async created() {
     // Listener Posts
@@ -314,9 +322,12 @@ export default {
         const provider = await web3Modal.connect();
         this.web3 = new Web3(provider);
 
-        this.signer = new ethers.providers.Web3Provider(provider).getSigner();
+        this.ethersProvider = new Web3Provider(provider);
+        await initializeEASInstance(this.ethersProvider); 
 
-        const accounts = await this.web3.eth.getAccounts();
+        this.eas = new EAS(EASContractAddress, signer);
+
+        const accounts = await this.ethersProvider.listAccounts(); // Use only this line to get accounts
         const rawAddress = accounts[0];
         const checksumAddress = this.toChecksumAddress(rawAddress);
         this.recipientAddress = checksumAddress;
@@ -512,9 +523,6 @@ export default {
     },
     async createAttestation(post) {
       
-      const eas = new EAS(EASContractAddress,);
-      eas.connect(signer);
-
       const schemaEncoder = new SchemaEncoder("string[] RadioStationName,uint64 Date,string TypeofParticipation");
       const encodedData = schemaEncoder.encodeData([
         { name: "RadioStationName", value: [this.radioStation.name], type: "string[]" },
