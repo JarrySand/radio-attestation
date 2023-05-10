@@ -37,3 +37,39 @@ export async function getAttestationsByRecipient(recipient) {
 
   return data.data.attestations;
 }
+
+export async function getAttestationsByAttester(attester) {
+  const query = `
+    query AttestationsByAttester($attester: String!) {
+      attestations(
+        where: { attester: { equals: $attester } },
+        orderBy: { time: desc }
+      ) {
+        id
+        attester
+        recipient
+        refUID
+        revocable
+        revocationTime
+        expirationTime
+        data
+      }
+    }
+  `;
+
+  const variables = {
+    attester,
+  };
+
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query, variables }),
+  });
+
+  const data = await response.json();
+
+  return data.data.attestations;
+}

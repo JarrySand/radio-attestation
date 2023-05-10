@@ -63,7 +63,8 @@
                   <strong>RefUID:</strong> {{ attestation.refUID }}<br>
                   <strong>Revocable:</strong> {{ attestation.revocable }}<br>
                   <strong>Revocation Time:</strong> {{ attestation.revocationTime }}<br>
-                  <strong>Expiration Time:</strong> {{ attestation.expirationTime }}
+                  <strong>Expiration Time:</strong> {{ attestation.expirationTime }}<br>
+                  <strong>EASscan URL:</strong> <a :href="easScanUrl(attestation.id)" target="_blank">{{ easScanUrl(attestation.id) }}</a>
                 </td>
               </tr>
             </template>
@@ -190,15 +191,49 @@
           </tbody>
         </table>
       </div>
-
-      <!-- Add the Radio Station specific UI here -->
+      <div v-if="radioStationAttestations.length > 0">
+      <h2>Radio Station Attestations ({{ radioStationAttestations.length }}):</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Recipient</th>
+            <th>Data</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-for="attestation in radioStationAttestations" :key="attestation.id">
+            <tr>
+              <td>{{ getRecipientName(attestation.recipient) }}</td>
+              <td>{{ attestation.data }}</td>
+              <td>
+                <button @click="toggleDetails(attestation.id)">Details</button>
+              </td>
+            </tr>
+            <tr v-if="showDetails[attestation.id]">
+              <td colspan="3">
+                <strong>ID:</strong> {{ attestation.id }}<br>
+                <strong>Attester:</strong> {{ attestation.attester }}<br>
+                <strong>Recipient:</strong> {{ attestation.recipient }}<br>
+                <strong>RefUID:</strong> {{ attestation.refUID }}<br>
+                <strong>Revocable:</strong> {{ attestation.revocable }}<br>
+                <strong>Revocation Time:</strong> {{ attestation.revocationTime }}<br>
+                <strong>Expiration Time:</strong> {{ attestation.expirationTime }}<br>
+                <strong>EASscan URL:</strong> <a :href="easScanUrl(attestation.id)" target="_blank">{{ easScanUrl(attestation.id) }}</a>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+        <!-- Add the Radio Station specific UI here -->
     </div>
   </div>
 </template>
 
 <script>
 import Web3Modal from "web3modal";
-import { getAttestationsByRecipient } from "./utils/easscan";
+import { getAttestationsByRecipient, getAttestationsByAttester } from "./utils/easscan";
 import Web3 from "web3";
 import { Buffer } from "buffer";
 import { db } from "./firebase";
@@ -206,18 +241,8 @@ import { collection, addDoc, where, query, getDocs, onSnapshot, doc, deleteDoc }
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { ethers } from 'ethers';
-import { InfuraProvider } from "@ethersproject/providers";
 
-let provider;
-
-if (window.ethereum) {
-  provider = new ethers.providers.Web3Provider(window.ethereum);
-} else {
-  // Fallback to a default provider
-  const infuraApiKey = "https://mainnet.infura.io/v3/2ff2983fb66349749d43fcb0a3402469";
-  const network = "mainnet"; // You can also use "rinkeby", "ropsten", "kovan", or "goerli"
-  provider = new InfuraProvider(network, infuraApiKey);
-}
+const provider = new ethers.providers.Web3Provider(window.ethereum);
 
 // Get the signer
 const signer = provider.getSigner();
@@ -262,6 +287,8 @@ export default {
       ],
       filteredRadioStationPostTypeOptions: [],
       signer: null,
+      radioStationAttestations: [],
+      users: [],
     };
   },
   async created() {
@@ -280,6 +307,8 @@ export default {
       id: doc.id,
       ...doc.data(),
     }));
+    const usersSnapshot = await getDocs(collection(db, "users"));
+    this.users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     await this.fetchPostTypeOptions();
     this.filteredRadioStationPostTypeOptions = this.getFilteredRadioStationPostTypeOptions();
   },
@@ -311,8 +340,18 @@ export default {
         return this.defaultPostTypeOptions;
       }
     },
+    easScanUrl() {
+      return (id) => `https://sepolia.easscan.org/attestation/view/${id}`;
+    },
   },
   methods: {
+    async fetchRadioStationAttestations(attesterAddress) {
+      const attestations = await getAttestationsByAttester(attesterAddress);
+      this.radioStationAttestations = attestations.map((attestation) => ({
+        ...attestation,
+        data: this.decodeAttestationData(attestation.data),
+      }));
+    },
     async connectWallet() {
       try {
         const providerOptions = {
@@ -355,6 +394,12 @@ export default {
       } catch (error) {
         console.error("Error connecting to wallet:", error);
       }
+      const accounts = await this.web3.eth.getAccounts();
+      const rawAddress = accounts[0];
+      const checksumAddress = this.toChecksumAddress(rawAddress);
+      this.attesterAddress = checksumAddress;
+
+      await this.fetchRadioStationAttestations(checksumAddress);
     },
 
     async signUp() {
@@ -471,6 +516,12 @@ export default {
         (station) => station.walletAddress === attesterAddress
       );
       return radioStation ? radioStation.name : null;
+    },
+    getRecipientName(recipientAddress) {
+      const user = this.users.find(
+        (user) => user.walletAddress === recipientAddress
+      );
+      return user ? user.penName : 'Unknown Recipient';
     },
     async definePostTypeOptions() {
       if (!this.radioStation || !this.radioStation.walletAddress) {
@@ -619,19 +670,24 @@ table {
   border-collapse: collapse;
   width: 100%;
   margin-top: 1rem;
-  border: 1px solid #000;
 }
 
-th,
-td {
-  border: 1px solid #000;
+table th,
+table td {
+  border: 1px solid #ccc;
   padding: 8px;
   text-align: left;
+  word-wrap: break-word;
+  max-width: 300px;
 }
 
-th {
-  background-color: #c0c0c0;
+table th {
+  background-color: #b3b3b3;
   font-weight: bold;
+}
+
+table tr:hover {
+  background-color: #ddd;
 }
 
 .form {
@@ -656,29 +712,6 @@ textarea {
   align-self: center;
   margin-top: 1rem;
 }
-
-.listener-posts {
-    width: 100%;
-    margin-top: 1rem;
-  }
-
-  .listener-posts th,
-  .listener-posts td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-    word-wrap: break-word;
-    max-width: 300px;
-  }
-
-  .listener-posts th {
-    background-color: #f2f2f2;
-    font-weight: bold;
-  }
-
-  .listener-posts tr:hover {
-    background-color: #ddd;
-  }
 
 .post-header,
 .post-content,
