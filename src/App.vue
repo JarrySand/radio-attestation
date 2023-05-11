@@ -242,11 +242,6 @@ import WalletConnectProvider from '@walletconnect/web3-provider';
 import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { ethers } from 'ethers';
 
-const provider = new ethers.providers.Web3Provider(window.ethereum);
-
-// Get the signer
-const signer = provider.getSigner();
-
 export const EASContractAddress = "0xC2679fBD37d54388Ce493F1DB75320D236e1815e"; // Sepolia v0.26
 
 export default {
@@ -583,6 +578,11 @@ export default {
       );
     },
     async createAttestation(post) {
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+      // Get the signer
+      const signer = provider.getSigner();
       
       const eas = new EAS(EASContractAddress,);
       eas.connect(signer);
