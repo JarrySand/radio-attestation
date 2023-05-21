@@ -1,17 +1,31 @@
 <template>
   <div id="app">
     <h1>{{ radioStation.name }}</h1>
+    <nav>
+      <ul>
+        <div>
+          <li>
+            <div class="nav-flex-container">
+              <div v-if="recipientAddress">Your Address:</div>
+              <div v-if="recipientAddress" :title="recipientAddress">{{ recipientAddress }}</div>
+              <div v-if="userPenName">Pen name:</div>
+              <div v-if="userPenName">{{ userPenName }}</div>
+            </div>
+          </li>
+          <li><a href="#feedback">Feedback</a></li>
+          <li><router-link to="/">Go back to main page</router-link></li>
+        </div>
+      </ul>
+    </nav>
     <p>{{ radioStation.description }}</p>
-    <a :href="radioStation.podcastLink">Podcast Link</a>
-    <p>Wallet Address: {{ radioStation.walletAddress }}</p>
-    <router-link to="/">Go back to main page</router-link>
+    <a :href="radioStation.podcastLink">Go and listen to the podcast</a>
 
     <div v-if="!recipientAddress">
       <button @click="connectWallet">Connect Wallet to make a post</button>
     </div>
 
     <div v-if="recipientAddress">
-      <p>Recipient Address: {{ recipientAddress }}</p>
+      <p>Your Address: {{ recipientAddress }}</p>
       <p v-if="userPenName">Welcome, {{ userPenName }}!</p>
 
       <div v-if="!userPenName">
@@ -26,7 +40,7 @@
       </div>
 
       <form @submit.prevent="makePost" class="form">
-        <div class="form-group">
+        <div class="form-group half-width">
           <label for="postType">Choose a type of post:</label>
           <select id="postType" v-model="postForm.postType" required>
             <option value="">Select a post type</option>
@@ -37,10 +51,15 @@
         </div>
         <div class="form-group">
           <label for="postContent">Post content:</label>
-          <textarea id="postContent" v-model="postForm.content" rows="4" cols="50" required></textarea>
+          <textarea id="postContent" v-model="postForm.content" rows="10" cols="200" required></textarea>
         </div>
         <button type="submit" class="submit-button">Submit Post</button>
       </form>
+    </div>
+    <div class="feedback-section">
+      <h2>We'd love to hear your feedback</h2>
+      <p>Your input helps us improve. Please take a moment to share your thoughts on our platform.</p>
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSf1OZuDeuVU9Q6wnRQVEZ46jOlWEgXbnoQ2QYPsay5BxiuSmQ/viewform" target="_blank" class="feedback-button">Leave Feedback</a>
     </div>
   </div>
 </template>
@@ -200,69 +219,5 @@ export default {
 </script>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
 
-  body {
-    font-family: 'Roboto Mono', Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #c0c0c0;
-    color: #000;
-  }
-
-  #app {
-    text-align: center;
-    padding: 2rem;
-  }
-
-  button {
-    background-color: #c0c0c0;
-    border: 1px solid #808080;
-    color: #000;
-    padding: 8px 16px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
-    cursor: pointer;
-  }
-
-  button:active {
-    border: 1px solid #fff;
-  }
-
-  .form {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    max-width: 400px;
-    margin: 0 auto;
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 1rem;
-  }
-
-  textarea {
-    resize: vertical;
-  }
-
-  .submit-button {
-    align-self: center;
-    margin-top: 1rem;
-  }
-
-  @media (max-width: 767px) {
-    body {
-      font-size: 14px;
-    }
-
-    .form {
-      max-width: 90%;
-      margin: 0 auto;
-    }
-  }
 </style>
