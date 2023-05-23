@@ -320,7 +320,7 @@ import { getAttestationsByRecipient, getAttestationsByAttester } from "../utils/
 import Web3 from "web3";
 import { Buffer } from "buffer";
 import { db } from "../firebase";
-import { collection, addDoc, where, query, getDocs, updateDoc, onSnapshot, doc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, where, query, getDocs, updateDoc, onSnapshot, doc, deleteDoc, serverTimestamp, orderBy } from "firebase/firestore";
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { ethers } from 'ethers';
@@ -379,7 +379,12 @@ export default {
   },
   async created() {
     // Listener Posts
-    onSnapshot(collection(db, "listenerPosts"), (snapshot) => {
+    const q = query(
+      collection(db, "listenerPosts"),
+      orderBy("timestamp", "desc")
+    );
+    
+    onSnapshot(q, (snapshot) => {
       this.listenerPosts = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -551,7 +556,8 @@ export default {
         postType: this.listenerPostForm.postType,
         content: this.listenerPostForm.content,
         walletAddress: this.recipientAddress,
-        penName: this.userPenName, 
+        penName: this.userPenName,
+        timestamp: serverTimestamp(), 
       };
 
       // Save listener post data to Firebase Firestore
@@ -792,7 +798,7 @@ export default {
 </script>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
   @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
 
   :root {
@@ -803,7 +809,7 @@ export default {
     --tertiary-color: #999999; /* Medium Grey for tertiary elements */
     --highlight-color: #333333; /* Dark Grey for highlights */
     --gradient-color: linear-gradient(315deg, #F5F5F5 0%, #CCCCCC 74%); /* Gradient from Light Grey to Medium Grey */
-    --primary-font: 'VT323', monospace; /* VT323 for main font */
+    --primary-font: 'DotGothic16', sans-serif; /* Dot Gothic 16 for main font */
     --secondary-font: 'Roboto Mono', monospace; /* Roboto Mono as fallback font */
   }
 
@@ -813,7 +819,7 @@ export default {
     padding: 0;
     background-color: var(--main-bg-color);
     color: var(--primary-color);
-    font-size: 18px;
+    font-size: 14px;
     padding-left: 240px; /* equal to the width of your navigation bar */
     box-sizing: border-box; /* added to include padding in total width */
   }
@@ -839,7 +845,7 @@ export default {
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 16px;
+    font-size: 14px;
     margin: 4px 2px;
     cursor: pointer;
     transition: background-color 0.3s ease;
@@ -854,7 +860,7 @@ export default {
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 16px;
+    font-size: 12px;
     cursor: pointer;
     transition: background-color 0.3s ease;
     width: 150px; /* adjust as needed */
@@ -1157,7 +1163,7 @@ export default {
 
     .switch-button {
       padding: 6px 12px; /* Increase size */
-      font-size: 16px; /* Increase font size */
+      font-size: 12px; /* Increase font size */
     }
 
     .switch-wrapper {

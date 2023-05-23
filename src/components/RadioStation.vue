@@ -12,12 +12,13 @@
               <div v-if="userPenName">{{ userPenName }}</div>
             </div>
           </li>
+          <li v-if="recipientAddress"><a href="#yourPosts">Your posts</a></li>
           <li><a href="#feedback">Feedback</a></li>
           <li><router-link to="/">Go back to main page</router-link></li>
         </div>
       </ul>
     </nav>
-    <p>{{ radioStation.description }}</p>
+    <p v-html="formattedDescription"></p>
     <a :href="radioStation.podcastLink">Go and listen to the podcast</a>
 
     <div v-if="!recipientAddress">
@@ -56,6 +57,29 @@
         <button type="submit" class="submit-button">Submit Post</button>
       </form>
     </div>
+
+    <div>
+      <h2 id="yourPosts">Your Posts for {{ radioStation.name }}:</h2>
+      <table v-if="userPosts.length > 0">
+        <thead>
+          <tr>
+            <th>Post Type</th>
+            <th>Content</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(post, index) in userPosts" :key="index">
+            <td>{{ post.postType }}</td>
+            <td>{{ post.content }}</td>
+            <td>
+              <button @click="deletePost(post)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <div class="feedback-section">
       <h2>We'd love to hear your feedback</h2>
       <p>Your input helps us improve. Please take a moment to share your thoughts on our platform.</p>
@@ -66,7 +90,7 @@
 
 
 <script>
-import { getFirestore, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, addDoc, doc, deleteDoc, orderBy, serverTimestamp } from 'firebase/firestore';
 import Web3 from 'web3';
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import Web3Modal from "web3modal";
@@ -90,6 +114,7 @@ export default {
         postType: "",
       },
       postTypeOptions: [],
+      userPosts: [],
     }
   },
   computed: {
@@ -99,11 +124,14 @@ export default {
     finalPostTypeOptions() {
       return this.postTypeOptions.length > 0 ? this.postTypeOptions : ['Questions', 'Opinions', 'Request'];
     },
+    formattedDescription() {
+      return this.radioStation && this.radioStation.description ? this.radioStation.description.replace(/\n/g, '<br>') : '';
+    },
   },
-  created() {
-    this.fetchRadioStationInfo();
-    this.fetchRadioStationInfo();
-    this.fetchPostTypeOptions();
+  async created() {
+    await this.fetchRadioStationInfo();
+    await this.fetchPostTypeOptions();
+    this.fetchUserPosts();
   },
   methods: {
     async fetchRadioStationInfo() {
@@ -178,6 +206,8 @@ export default {
         this.user = userData;
         this.currentListener = userData; // Add this line
       }
+
+      await this.fetchUserPosts();
     },
 
     async logout() {
@@ -194,16 +224,21 @@ export default {
           postType: this.postForm.postType,
           walletAddress: this.walletAddress,
           station: this.radioStation.name,
+          timestamp: serverTimestamp(),
         };
         // Save post data to Firebase Firestore
         await addDoc(collection(db, "listenerPosts"), postData);
         // Clear the form
         this.postForm.content = "";
         this.postForm.postType = "";
+
+        // Fetch user posts again after making a new post
+        this.fetchUserPosts();
       } catch (error) {
         console.error("Error making post: ", error);
       }
     },
+
     async fetchPostTypeOptions() {
       const q = query(collection(db, 'postTypeOptions'), where('radioStationWalletAddress', '==', this.walletAddress));
       const querySnapshot = await getDocs(q);
@@ -213,6 +248,57 @@ export default {
       } else {
         console.log("No post type options found!");
       }
+    },
+    async fetchUserPosts() {
+
+      if(!this.userPenName || !this.radioStation || !this.radioStation.name) {
+        return;
+      }
+
+      const db = getFirestore();
+      const q = query(
+        collection(db, 'listenerPosts'),
+        where('penName', '==', this.userPenName),
+        where('station', '==', this.radioStation.name),
+        orderBy("timestamp", "desc") // order posts by timestamp, most recent first
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        this.userPosts = querySnapshot.docs.map(doc => {
+          // Get data and id
+          let data = doc.data();
+          let id = doc.id;
+          // Return combined object
+          return { id, ...data };
+        });
+      } else {
+        console.log("No posts found!");
+      }
+    },
+    async deletePost(post) {
+      const db = getFirestore();
+      const postRef = doc(db, 'listenerPosts', post.id);
+      await deleteDoc(postRef);
+
+      // Also update userPosts array
+      this.userPosts = this.userPosts.filter(item => item.id !== post.id);
+    },
+  },
+  watch: {
+    userPenName: {
+      immediate: true,
+      handler() {
+        this.fetchUserPosts();
+      },
+    },
+    'radioStation.name': {
+      immediate: true,
+      handler() {
+        if(this.userPenName && this.radioStation && this.radioStation.name) {
+          this.fetchUserPosts();
+        }
+      },
     },
   },
 }  
