@@ -3,26 +3,24 @@
     <h1>on AIR/CHAIN</h1>
     <nav>
       <ul>
-        <div>
-          <li>
-            <div class="nav-flex-container">
-              <div v-if="recipientAddress">Your Address:</div>
-              <div v-if="recipientAddress" :title="recipientAddress">{{ recipientAddress }}</div>
-              <div v-if="!isRadioStation && userPenName">Pen name:</div>
-              <div v-if="!isRadioStation && userPenName">{{ userPenName }}</div>
-              <div v-if="isRadioStation && radioStation && radioStation.name">Station name:</div>
-              <div v-if="isRadioStation && radioStation && radioStation.name">{{ radioStation.name }}</div>
-            </div>
-          </li>
-          <li v-if="!isRadioStation && attestations.length > 0"><a href="#attestations">Attestations ({{ attestationCount }})</a></li>
-          <li v-if="!isRadioStation && recipientAddress"><a href="#makeAPost">Make a post</a></li>
-          <li v-if="!isRadioStation && listenerPosts.length > 0 && recipientAddress"><a href="#yourPosts">Your Posts</a></li>
-          <li v-if="isRadioStation && recipientAddress && radioStationPosts.length > 0"><a href="#listenerPosts">Listner posts</a></li>
-          <li v-if="isRadioStation && recipientAddress && radioStationAttestations.length > 0"><a href="#issuedAttestations">Issued attestations</a></li>
-          <li v-if="isRadioStation && recipientAddress"><a href="#settings">Settings</a></li>
-          <li v-if="recipientAddress"><a href="#feedback">Feedback</a></li>
-        </div>
-        <div class="switch-wrapper">
+        <li>
+          <div class="nav-flex-container" id="navFlexContainer">
+            <div v-if="recipientAddress">Your Address:</div>
+            <div v-if="recipientAddress" :title="recipientAddress">{{ recipientAddress }}</div>
+            <div v-if="!isRadioStation && userPenName">Pen name:</div>
+            <div v-if="!isRadioStation && userPenName">{{ userPenName }}</div>
+            <div v-if="isRadioStation && radioStation && radioStation.name">Station name:</div>
+            <div v-if="isRadioStation && radioStation && radioStation.name">{{ radioStation.name }}</div>
+          </div>
+        </li>
+        <li v-if="!isRadioStation && attestations.length > 0"><a href="#attestations">Attestations ({{ attestationCount }})</a></li>
+        <li v-if="!isRadioStation && recipientAddress"><a href="#makeAPost">Make a post</a></li>
+        <li v-if="!isRadioStation && listenerPosts.length > 0 && recipientAddress"><a href="#yourPosts">Your Posts</a></li>
+        <li v-if="isRadioStation && recipientAddress && radioStationPosts.length > 0"><a href="#listenerPosts">Listner posts</a></li>
+        <li v-if="isRadioStation && recipientAddress && radioStationAttestations.length > 0"><a href="#issuedAttestations">Issued attestations</a></li>
+        <li v-if="isRadioStation && recipientAddress"><a href="#settings">Settings</a></li>
+        <li v-if="recipientAddress"><a href="#feedback">Feedback</a></li>
+        <li class="switch-wrapper">
           <div class="switch-container">
             <button
               class="switch-button"
@@ -39,9 +37,10 @@
               For Radio Stations
             </button>
           </div>
-        </div>
+        </li>
       </ul>
     </nav>
+
 
     <div v-if="!isRadioStation">
       <!-- Listener UI -->
@@ -1122,55 +1121,126 @@ export default {
   }
 
   @media (max-width: 767px) {
+  /* Reset body styles */
     body {
       font-size: 14px;
       padding: 1rem;
+      padding-top: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+      box-sizing: border-box;
+      padding-left: 0;
     }
 
+    /* Update #app styles for mobile view */
+    #app {
+      text-align: center;
+      margin: 0 auto;
+      max-width: 768px;
+    }
+
+    /* Update form styles */
     .form {
       max-width: 90%;
       margin: 0 auto;
+      align-items: center;
     }
-    
+
+    /* Update button styles */
     button {
-      padding: 12px 24px; /* Increase button size */
+      padding: 12px 24px;
     }
 
-    h1, h2, h3, h4, h5, h6 {
-      font-size: 2rem; /* Adjust heading sizes */
+    /* Update heading styles */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-size: 2rem;
     }
-    
+
+    /* Update card container styles */
     .card-container {
-      flex-direction: column; /* Stack cards vertically */
+      flex-direction: column;
     }
 
+    /* Update card styles */
     .card {
-      width: 100%; /* Make cards full width */
-      margin-bottom: 16px; /* Add vertical spacing between cards */
-    }
-    
-    .form, .form-group {
-      align-items: stretch; /* Full width form elements */
+      width: 100%;
+      margin-bottom: 16px;
     }
 
-    #app {
-      text-align: left; /* Left align text */
+    /* Update form and form-group styles */
+    .form,
+    .form-group {
+      align-items: center;
     }
 
+    /* Update textarea styles */
     textarea {
-      height: 250px; /* Increase height */
+      height: 250px;
     }
 
+    /* Update switch-button styles */
     .switch-button {
-      padding: 6px 12px; /* Increase size */
-      font-size: 12px; /* Increase font size */
+      padding: 6px 12px;
+      font-size: 12px;
     }
 
+    /* Update switch-wrapper styles */
     .switch-wrapper {
-      position: static; /* Remove the absolute positioning */
-      /* Center the element */
+      position: static;
       display: flex;
       justify-content: center;
+    }
+
+    /* Update navigation styles */
+    nav {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      z-index: 9999;
+      background-color: var(--primary-color);
+      height: calc(20% - 50px);
+      padding-left: 0;
+    }
+
+    nav, nav ul, nav ul li {
+      margin: 0;
+      padding: 0;
+    }
+
+    nav ul {
+      flex-direction: row;
+      flex-wrap: wrap; /* Allow the items to wrap to the next line */
+      justify-content: flex-start;
+    }
+
+    nav ul li {
+      flex: 1 0 auto; /* Allow items to grow and shrink, don't force them to a specific width */
+      white-space: nowrap; /* Prevent the text inside the items from wrapping */
+      overflow: hidden; /* Hide any overflow */
+      text-overflow: ellipsis; /* Display an ellipsis when the text is too long to fit */
+      padding: 0px; /* adjust as needed */
+    }
+
+    nav ul li a {
+      font-size: 12px; /* adjust as needed */
+      padding: 5px;  /* adjust as needed */
+    }
+
+    /* Hide the switch bar for mobile views */
+    nav ul .switch-wrapper {
+      display: none;
+    }
+
+    #navFlexContainer {
+      display: none;
     }
   }
 
