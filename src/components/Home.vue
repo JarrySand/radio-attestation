@@ -3,7 +3,7 @@
     <h1>on AIR/CHAIN</h1>
     <nav>
       <ul>
-        <li>
+        <li id="navFlexContainerLi">
           <div class="nav-flex-container" id="navFlexContainer">
             <div v-if="recipientAddress">Your Address:</div>
             <div v-if="recipientAddress" :title="recipientAddress">{{ recipientAddress }}</div>
@@ -1160,7 +1160,7 @@ export default {
     h4,
     h5,
     h6 {
-      font-size: 2rem;
+      font-size: 1.5rem;
     }
 
     /* Update card container styles */
@@ -1208,6 +1208,7 @@ export default {
       background-color: var(--primary-color);
       height: calc(20% - 50px);
       padding-left: 0;
+      box-sizing: border-box;
     }
 
     nav, nav ul, nav ul li {
@@ -1222,7 +1223,7 @@ export default {
     }
 
     nav ul li {
-      flex: 1 0 auto; /* Allow items to grow and shrink, don't force them to a specific width */
+      flex: 1 1 auto; /* Allow items to grow and shrink, don't force them to a specific width */
       white-space: nowrap; /* Prevent the text inside the items from wrapping */
       overflow: hidden; /* Hide any overflow */
       text-overflow: ellipsis; /* Display an ellipsis when the text is too long to fit */
@@ -1242,6 +1243,11 @@ export default {
     #navFlexContainer {
       display: none;
     }
+
+    #navFlexContainerLi {
+        display: none;
+    }
+
   }
 
 </style>
