@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <h1>on AIR/CHAIN</h1>
     <nav>
       <ul>
         <li id="navFlexContainerLi">
@@ -41,201 +40,58 @@
       </ul>
     </nav>
 
+    <div id="mainContent">
+      <h1>on AIR/CHAIN</h1>
+      <div v-if="!isRadioStation">
+        <!-- Listener UI -->
+        <button v-if="!recipientAddress" @click="connectWallet">Connect Wallet</button>
+        <p v-if="recipientAddress">Your Address: {{ recipientAddress }}</p>
+        <p v-if="userPenName">Welcome, {{ userPenName }}!</p>
 
-    <div v-if="!isRadioStation">
-      <!-- Listener UI -->
-      <button v-if="!recipientAddress" @click="connectWallet">Connect Wallet</button>
-      <p v-if="recipientAddress">Your Address: {{ recipientAddress }}</p>
-      <p v-if="userPenName">Welcome, {{ userPenName }}!</p>
-
-      <div v-if="!userPenName && recipientAddress">
-        <h2>Sign Up</h2>
-        <form @submit.prevent="signUp">
-          <label for="penName">Pen Name:</label>
-          <input type="text" id="penName" v-model="signUpForm.penName" required />
-          <button type="submit">Sign Up</button>
-        </form>
-      </div>
-
-      <!-- <button v-if="recipientAddress" v-on:click="toggleRadioStations">
-      {{ isButtonClicked ? 'Exit' : 'Explore Radio Stations' }}
-      </button>
-      <div v-if="isButtonClicked">
-          <div class="card-container">
-              <div v-for="(station, index) in radioStations" :key="index" class="card">
-                  <a :href="`/${station.walletAddress}`" target="_blank">
-                      <h3>{{ station.name }}</h3>
-                      <p>{{ station.description }}</p>
-                  </a>
-              </div>
-          </div>
-      </div>-->
-
-
-      <div v-if="attestations.length > 0">
-        <h2 id="attestations">Attestations ({{ attestationCount }}):</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Radio Station</th>
-              <th>Data</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="attestation in attestations" :key="attestation.id">
-              <tr v-if="getRadioStationName(attestation.attester)">
-                <td>{{ getRadioStationName(attestation.attester) }}</td>
-                <td>{{ attestation.data }}</td>
-                <td>
-                  <button @click="toggleDetails(attestation.id)">Details</button>
-                </td>
-              </tr>
-              <tr v-if="showDetails[attestation.id] && getRadioStationName(attestation.attester)">
-                <td colspan="3">
-                  <strong>ID:</strong> {{ attestation.id }}<br>
-                  <strong>Attester:</strong> {{ attestation.attester }}<br>
-                  <strong>Recipient:</strong> {{ attestation.recipient }}<br>
-                  <strong>RefUID:</strong> {{ attestation.refUID }}<br>
-                  <strong>Revocable:</strong> {{ attestation.revocable }}<br>
-                  <strong>Revocation Time:</strong> {{ attestation.revocationTime }}<br>
-                  <strong>Expiration Time:</strong> {{ attestation.expirationTime }}<br>
-                  <strong>EASscan URL:</strong> <a :href="easScanUrl(attestation.id)" target="_blank">{{ easScanUrl(attestation.id) }}</a>
-                </td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
-      </div>
-
-      <div v-if="recipientAddress">
-          <h2 id="makeAPost">Make a post</h2>
-          <form @submit.prevent="submitListenerPost" class="form">
-              <div class="form-row">
-                  <div class="form-group half-width">
-                      <label for="station">Choose a radio station:</label>
-                      <div class="select-container">
-                          <select id="station" v-model="listenerPostForm.station" required>
-                              <option value="">Select a station</option>
-                              <option v-for="station in radioStations" :key="station.id" :value="station.name">
-                              {{ station.name }}
-                              </option>
-                          </select>
-                      </div>
-                  </div>
-                  <div class="form-group half-width">
-                      <label for="postType">Choose a type of post:</label>
-                      <div class="select-container">
-                          <select id="postType" v-model="listenerPostForm.postType" required>
-                              <option value="">Select a post type</option>
-                              <option v-for="option in computedPostTypeOptions" :key="option.id || option">
-                              {{ option.name || option }}
-                              </option>
-                          </select>
-                      </div>
-                  </div>
-              </div>
-              <div class="form-group">
-                  <label for="postContent">Post content:</label>
-                  <textarea id="postContent" v-model="listenerPostForm.content" rows="10" cols="190" class="textarea" required></textarea>
-              </div>
-              <button type="submit" class="submit-button">Submit Post</button>
+        <div v-if="!userPenName && recipientAddress">
+          <h2>Sign Up</h2>
+          <form @submit.prevent="signUp">
+            <label for="penName">Pen Name:</label>
+            <input type="text" id="penName" v-model="signUpForm.penName" required />
+            <button type="submit">Sign Up</button>
           </form>
-      </div>
-      <div v-if="listenerPosts.length > 0 && recipientAddress">
-        <h2 id="yourPosts">Your Posts:</h2>
-        <table class="listener-posts" style="border: 1px solid #000;">
-          <thead>
-            <tr>
-              <th>Station</th>
-              <th>Type</th>
-              <th>Content</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="post in currentListenerPosts" :key="post.id">
-              <td>{{ post.station }}</td>
-              <td>{{ post.postType }}</td>
-              <td>{{ post.content }}</td>
-              <td>
-                <button @click="deletePost(post.id)">Delete</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="feedback-section">
-        <h2 id="feedback">We'd love to hear your feedback</h2>
-        <p>Your input helps us improve. Please take a moment to share your thoughts on our platform.</p>
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSf1OZuDeuVU9Q6wnRQVEZ46jOlWEgXbnoQ2QYPsay5BxiuSmQ/viewform" target="_blank" class="feedback-button">Leave Feedback</a>
-      </div>
-    </div>
-    <div v-else>
-      <!-- Radio Station UI -->
-      <button v-if="!radioStation" @click="connectWallet">Connect Wallet</button>
-      <p v-if="recipientAddress">Your Address: {{ recipientAddress }}</p>
-      <p v-if="radioStation && radioStation.name">Welcome, {{ radioStation.name }}!</p>
-
-      <div v-if="!radioStation && recipientAddress">
-        <h2>Sign Up</h2>
-        <form @submit.prevent="signUpRadioStation">
-          <label for="radioStationName">Radio Station Name:</label>
-          <input type="text" id="radioStationName" v-model="radioStationSignUpForm.name" required />
-          <button type="submit">Sign Up</button>
-        </form>
-      </div>
-
-      <div v-if="isRadioStation && recipientAddress">
-        <div v-if="radioStationPosts.length > 0">
-            <h2 id="listenerPosts">Listener Posts for {{ radioStation.name }}:</h2>
-            <table class="listener-posts">
-              <thead>
-                <tr>
-                  <th>Pen Name</th>
-                  <th>Type</th>
-                  <th>Content</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="post in radioStationPosts" :key="post.id" class="listener-post">
-                  <td>{{ post.penName }}</td>
-                  <td>{{ post.postType }}</td>
-                  <td>{{ post.content }}</td>
-                  <td>
-                      <select v-model="post.participationType" required>
-                          <option value="Post">Post</option>
-                          <option value="Selected post">Selected post</option>
-                          <option value="The best post">The best post</option>
-                      </select>
-                      <button @click="createAttestation(post)">Attest</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
         </div>
 
-        <div v-if="radioStationAttestations.length > 0">
-          <h2 id="issuedAttestations">Issued Attestations ({{ radioStationAttestations.length }}):</h2>
+        <!-- <button v-if="recipientAddress" v-on:click="toggleRadioStations">
+        {{ isButtonClicked ? 'Exit' : 'Explore Radio Stations' }}
+        </button>
+        <div v-if="isButtonClicked">
+            <div class="card-container">
+                <div v-for="(station, index) in radioStations" :key="index" class="card">
+                    <a :href="`/${station.walletAddress}`" target="_blank">
+                        <h3>{{ station.name }}</h3>
+                        <p>{{ station.description }}</p>
+                    </a>
+                </div>
+            </div>
+        </div>-->
+
+
+        <div v-if="attestations.length > 0">
+          <h2 id="attestations">Attestations ({{ attestationCount }}):</h2>
           <table>
             <thead>
               <tr>
-                <th>Recipient</th>
+                <th>Radio Station</th>
                 <th>Data</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              <template v-for="attestation in radioStationAttestations" :key="attestation.id">
-                <tr>
-                  <td>{{ getRecipientName(attestation.recipient) }}</td>
+              <template v-for="attestation in attestations" :key="attestation.id">
+                <tr v-if="getRadioStationName(attestation.attester)">
+                  <td>{{ getRadioStationName(attestation.attester) }}</td>
                   <td>{{ attestation.data }}</td>
                   <td>
                     <button @click="toggleDetails(attestation.id)">Details</button>
                   </td>
                 </tr>
-                <tr v-if="showDetails[attestation.id]">
+                <tr v-if="showDetails[attestation.id] && getRadioStationName(attestation.attester)">
                   <td colspan="3">
                     <strong>ID:</strong> {{ attestation.id }}<br>
                     <strong>Attester:</strong> {{ attestation.attester }}<br>
@@ -251,65 +107,210 @@
             </tbody>
           </table>
         </div>
-        <h2 id="settings">Settings</h2>
-        <button @click="showEditPage = !showEditPage">
-            {{ showEditPage ? 'Back to Dashboard' : 'Edit My Page' }}
-        </button>
 
-        <div v-if="showEditPage">
-          <h2>Edit Radio Station Page</h2>
-          <form @submit.prevent="updateRadioStation">
-              <label for="description">Description:</label>
-              <textarea id="description" v-model="radioStationForm.description" required class="large-textarea"></textarea>
-              
-              <label for="podcastLink">Podcast Link:</label>
-              <input type="url" id="podcastLink" v-model="radioStationForm.podcastLink" required />
-              
-              <button type="submit">Save Changes</button>
+        <div v-if="recipientAddress">
+            <h2 id="makeAPost">Make a post</h2>
+            <form @submit.prevent="submitListenerPost" class="form">
+                <div class="form-row">
+                    <div class="form-group half-width">
+                        <label for="station">Choose a radio station:</label>
+                        <div class="select-container">
+                            <select id="station" v-model="listenerPostForm.station" required>
+                                <option value="">Select a station</option>
+                                <option v-for="station in radioStations" :key="station.id" :value="station.name">
+                                {{ station.name }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group half-width">
+                        <label for="postType">Choose a type of post:</label>
+                        <div class="select-container">
+                            <select id="postType" v-model="listenerPostForm.postType" required>
+                                <option value="">Select a post type</option>
+                                <option v-for="option in computedPostTypeOptions" :key="option.id || option">
+                                {{ option.name || option }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="postContent">Post content:</label>
+                    <textarea id="postContent" v-model="listenerPostForm.content" rows="10" cols="190" class="textarea" required></textarea>
+                </div>
+                <button type="submit" class="submit-button">Submit Post</button>
+            </form>
+        </div>
+        <div v-if="listenerPosts.length > 0 && recipientAddress">
+          <h2 id="yourPosts">Your Posts:</h2>
+          <table class="listener-posts" style="border: 1px solid #000;">
+            <thead>
+              <tr>
+                <th>Station</th>
+                <th>Type</th>
+                <th>Content</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="post in currentListenerPosts" :key="post.id">
+                <td>{{ post.station }}</td>
+                <td>{{ post.postType }}</td>
+                <td>{{ post.content }}</td>
+                <td>
+                  <button @click="deletePost(post.id)">Delete</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="feedback-section">
+          <h2 id="feedback">We'd love to hear your feedback</h2>
+          <p>Your input helps us improve. Please take a moment to share your thoughts on our platform.</p>
+          <a href="https://docs.google.com/forms/d/e/1FAIpQLSf1OZuDeuVU9Q6wnRQVEZ46jOlWEgXbnoQ2QYPsay5BxiuSmQ/viewform" target="_blank" class="feedback-button">Leave Feedback</a>
+        </div>
+      </div>
+      <div v-else>
+        <!-- Radio Station UI -->
+        <button v-if="!radioStation" @click="connectWallet">Connect Wallet</button>
+        <p v-if="recipientAddress">Your Address: {{ recipientAddress }}</p>
+        <p v-if="radioStation && radioStation.name">Welcome, {{ radioStation.name }}!</p>
+
+        <div v-if="!radioStation && recipientAddress">
+          <h2>Sign Up</h2>
+          <form @submit.prevent="signUpRadioStation">
+            <label for="radioStationName">Radio Station Name:</label>
+            <input type="text" id="radioStationName" v-model="radioStationSignUpForm.name" required />
+            <button type="submit">Sign Up</button>
           </form>
         </div>
 
-        <button @click="viewMyPage" class="view-my-page-button">View My Page</button>
-        
-        <button @click="showPostTypeOptionSetting = !showPostTypeOptionSetting">
-          {{ showPostTypeOptionSetting ? 'Hide Post Type Option Setting' : 'Post Type Option Setting' }}
-        </button>
-
-        <div v-if="showPostTypeOptionSetting">
-          <h2>Define Post Type Options</h2>
-          <form @submit.prevent="definePostTypeOptions">
-              <label for="postTypeOption">Post Type Option:</label>
-              <input type="text" id="postTypeOption" v-model="postTypeOptionForm.name" required />
-              <button type="submit">Add Post Type Option</button>
-          </form>
-  
-          <div v-if="isRadioStation && recipientAddress">
-              <h3>Current post type options</h3>
-              <table>
-                  <thead>
+        <div v-if="isRadioStation && recipientAddress">
+          <div v-if="radioStationPosts.length > 0">
+              <h2 id="listenerPosts">Listener Posts for {{ radioStation.name }}:</h2>
+              <table class="listener-posts">
+                <thead>
                   <tr>
-                      <th>Option Name</th>
-                      <th>Action</th>
+                    <th>Pen Name</th>
+                    <th>Type</th>
+                    <th>Content</th>
+                    <th>Action</th>
                   </tr>
-                  </thead>
-                  <tbody>
-                  <tr v-for="option in filteredRadioStationPostTypeOptions" :key="option.id">
-                      <td>{{ option.name }}</td>
-                      <td>
-                      <button @click="deletePostTypeOption(option.id)">Delete</button>
-                      </td>
+                </thead>
+                <tbody>
+                  <tr v-for="post in radioStationPosts" :key="post.id" class="listener-post">
+                    <td>{{ post.penName }}</td>
+                    <td>{{ post.postType }}</td>
+                    <td>{{ post.content }}</td>
+                    <td>
+                        <select v-model="post.participationType" required>
+                            <option value="Post">Post</option>
+                            <option value="Selected post">Selected post</option>
+                            <option value="The best post">The best post</option>
+                        </select>
+                        <button @click="createAttestation(post)">Attest</button>
+                    </td>
                   </tr>
-                  </tbody>
+                </tbody>
               </table>
           </div>
+
+          <div v-if="radioStationAttestations.length > 0">
+            <h2 id="issuedAttestations">Issued Attestations ({{ radioStationAttestations.length }}):</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Recipient</th>
+                  <th>Data</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-for="attestation in radioStationAttestations" :key="attestation.id">
+                  <tr>
+                    <td>{{ getRecipientName(attestation.recipient) }}</td>
+                    <td>{{ attestation.data }}</td>
+                    <td>
+                      <button @click="toggleDetails(attestation.id)">Details</button>
+                    </td>
+                  </tr>
+                  <tr v-if="showDetails[attestation.id]">
+                    <td colspan="3">
+                      <strong>ID:</strong> {{ attestation.id }}<br>
+                      <strong>Attester:</strong> {{ attestation.attester }}<br>
+                      <strong>Recipient:</strong> {{ attestation.recipient }}<br>
+                      <strong>RefUID:</strong> {{ attestation.refUID }}<br>
+                      <strong>Revocable:</strong> {{ attestation.revocable }}<br>
+                      <strong>Revocation Time:</strong> {{ attestation.revocationTime }}<br>
+                      <strong>Expiration Time:</strong> {{ attestation.expirationTime }}<br>
+                      <strong>EASscan URL:</strong> <a :href="easScanUrl(attestation.id)" target="_blank">{{ easScanUrl(attestation.id) }}</a>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <h2 id="settings">Settings</h2>
+          <button @click="showEditPage = !showEditPage">
+              {{ showEditPage ? 'Back to Dashboard' : 'Edit My Page' }}
+          </button>
+
+          <div v-if="showEditPage">
+            <h2>Edit Radio Station Page</h2>
+            <form @submit.prevent="updateRadioStation">
+                <label for="description">Description:</label>
+                <textarea id="description" v-model="radioStationForm.description" required class="large-textarea"></textarea>
+                
+                <label for="podcastLink">Podcast Link:</label>
+                <input type="url" id="podcastLink" v-model="radioStationForm.podcastLink" required />
+                
+                <button type="submit">Save Changes</button>
+            </form>
+          </div>
+
+          <button @click="viewMyPage" class="view-my-page-button">View My Page</button>
+          
+          <button @click="showPostTypeOptionSetting = !showPostTypeOptionSetting">
+            {{ showPostTypeOptionSetting ? 'Hide Post Type Option Setting' : 'Post Type Option Setting' }}
+          </button>
+
+          <div v-if="showPostTypeOptionSetting">
+            <h2>Define Post Type Options</h2>
+            <form @submit.prevent="definePostTypeOptions">
+                <label for="postTypeOption">Post Type Option:</label>
+                <input type="text" id="postTypeOption" v-model="postTypeOptionForm.name" required />
+                <button type="submit">Add Post Type Option</button>
+            </form>
+    
+            <div v-if="isRadioStation && recipientAddress">
+                <h3>Current post type options</h3>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Option Name</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="option in filteredRadioStationPostTypeOptions" :key="option.id">
+                        <td>{{ option.name }}</td>
+                        <td>
+                        <button @click="deletePostTypeOption(option.id)">Delete</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+          </div>
+        </div> 
+        <div class="feedback-section">
+          <h2 id="feedback">We'd love to hear your feedback</h2>
+          <p>Your input helps us improve. Please take a moment to share your thoughts on our platform.</p>
+          <a href="https://docs.google.com/forms/d/e/1FAIpQLSf1OZuDeuVU9Q6wnRQVEZ46jOlWEgXbnoQ2QYPsay5BxiuSmQ/viewform" target="_blank" class="feedback-button">Leave Feedback</a>
         </div>
       </div> 
-      <div class="feedback-section">
-        <h2 id="feedback">We'd love to hear your feedback</h2>
-        <p>Your input helps us improve. Please take a moment to share your thoughts on our platform.</p>
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSf1OZuDeuVU9Q6wnRQVEZ46jOlWEgXbnoQ2QYPsay5BxiuSmQ/viewform" target="_blank" class="feedback-button">Leave Feedback</a>
-      </div>
-    </div> 
+    </div>
   </div>
 </template>
   
@@ -1141,6 +1142,10 @@ export default {
       max-width: 768px;
     }
 
+    #mainContent {
+      padding-top: 3.75rem; /* It should be at least the height of the nav */
+    }
+
     /* Update form styles */
     .form {
       max-width: 90%;
@@ -1206,9 +1211,10 @@ export default {
       width: 100%;
       z-index: 9999;
       background-color: var(--primary-color);
-      height: calc(20% - 50px);
+      height: 3.75rem;
       padding-left: 0;
       box-sizing: border-box;
+      overflow: auto;
     }
 
     nav, nav ul, nav ul li {

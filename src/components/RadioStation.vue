@@ -1,23 +1,21 @@
 <template>
   <div id="app">
-    <h1>{{ radioStation.name }}</h1>
     <nav>
       <ul>
-        <div>
-          <li>
-            <div class="nav-flex-container">
-              <div v-if="recipientAddress">Your Address:</div>
-              <div v-if="recipientAddress" :title="recipientAddress">{{ recipientAddress }}</div>
-              <div v-if="userPenName">Pen name:</div>
-              <div v-if="userPenName">{{ userPenName }}</div>
-            </div>
-          </li>
-          <li v-if="recipientAddress"><a href="#yourPosts">Your posts</a></li>
-          <li><a href="#feedback">Feedback</a></li>
-          <li><router-link to="/">Go back to main page</router-link></li>
-        </div>
+        <li id="navFlexContainerLi">
+          <div class="nav-flex-container" id="navFlexContainer">
+            <div v-if="recipientAddress">Your Address:</div>
+            <div v-if="recipientAddress" :title="recipientAddress">{{ recipientAddress }}</div>
+            <div v-if="userPenName">Pen name:</div>
+            <div v-if="userPenName">{{ userPenName }}</div>
+          </div>
+        </li>
+        <li v-if="recipientAddress"><a href="#yourPosts">Your posts</a></li>
+        <li><a href="#feedback">Feedback</a></li>
+        <li><router-link to="/">Go back to main page</router-link></li>
       </ul>
     </nav>
+    <h1>{{ radioStation.name }}</h1>
     <p v-html="formattedDescription"></p>
     <a :href="radioStation.podcastLink">Go and listen to the podcast</a>
 
@@ -42,7 +40,7 @@
 
       <form @submit.prevent="makePost" class="form">
         <div class="form-group half-width">
-          <label for="postType">Choose a type of post:</label>
+          <label for="postType">Choose a post type:</label>
           <select id="postType" v-model="postForm.postType" required>
             <option value="">Select a post type</option>
             <option v-for="option in finalPostTypeOptions" :key="option">
